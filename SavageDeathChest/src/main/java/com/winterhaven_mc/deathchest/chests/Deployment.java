@@ -702,21 +702,21 @@ public final class Deployment {
 			return false;
 		}
 
-		// get block adjacent to chest facing player direction
-		Block signBlock = chestBlock.getRelative(getCardinalDirection(player));
+		// get block on top of chest
+		Block signBlock = chestBlock.getRelative(BlockFace.UP);
 
-		// if chest face is valid location, create wall sign
+		// if chest top is valid location, create sign on top
 		if (isValidSignLocation(signBlock.getLocation())) {
-			signBlock.setType(Material.OAK_WALL_SIGN);
+			signBlock.setType(Material.OAK_SIGN);
 		}
 		else {
-			// create sign post on top of chest if chest face was invalid location
-			signBlock = chestBlock.getRelative(BlockFace.UP);
+			// create sign on chest face if chest top was invalid location
+			signBlock = chestBlock.getRelative(getCardinalDirection(player));
 			if (isValidSignLocation(signBlock.getLocation())) {
-				signBlock.setType(Material.OAK_SIGN);
+				signBlock.setType(Material.OAK_WALL_SIGN);
 			}
 			else {
-				// if top of chest is also an invalid location, do nothing and return
+				// if chest face is also an invalid location, do nothing and return
 				return false;
 			}
 		}
@@ -763,9 +763,11 @@ public final class Deployment {
 		}
 
 		// set sign facing direction
-		BlockData signData = signBlock.getBlockData();
-		((Directional) signData).setFacing(getCardinalDirection(player));
-		signBlock.setBlockData(signData);
+		if (signBlock.getType() != Material.OAK_SIGN) {
+			BlockData signData = signBlock.getBlockData();
+			((Directional) signData).setFacing(getCardinalDirection(player));
+			signBlock.setBlockData(signData);
+		}
 
 		// update sign block with text and direction
 		sign.update();
