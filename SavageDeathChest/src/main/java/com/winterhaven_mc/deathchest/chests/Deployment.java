@@ -13,6 +13,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -601,7 +602,9 @@ public final class Deployment {
 		blockState.setType(Material.CHEST);
 
 		// set direction
-		blockState.setData(new org.bukkit.material.Chest(getCardinalDirection(location)));
+		BlockData blockData = blockState.getBlockData();
+		((Directional) blockData).setFacing(getCardinalDirection(location));
+		blockState.setBlockData(blockData);
 
 		// update chest BlockState
 		blockState.update(true, false);
@@ -760,9 +763,9 @@ public final class Deployment {
 		}
 
 		// set sign facing direction
-		org.bukkit.material.Sign signData = (org.bukkit.material.Sign) signBlockState.getData();
-		signData.setFacingDirection(getCardinalDirection(player));
-		sign.setData(signData);
+		BlockData signData = signBlock.getBlockData();
+		((Directional) signData).setFacing(getCardinalDirection(player));
+		signBlock.setBlockData(signData);
 
 		// update sign block with text and direction
 		sign.update();

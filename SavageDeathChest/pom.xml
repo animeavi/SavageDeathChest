@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.winterhaven-mc</groupId>
 	<artifactId>SavageDeathChest</artifactId>
-	<version>1.13.5</version>
+	<version>1.14</version>
 	<name>SavageDeathChest</name>
 	<url>http://dev.bukkit.org/bukkit-plugins/savagedeathchest/</url>
 
@@ -33,6 +33,18 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>spigotmc-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>ender-zone</id>
+			<url>http://ci.ender.zone/plugin/repository/everything/</url>
+		</repository>
+		<repository>
+			<id>articdive-repo</id>
+			<url>https://nexus.articdive.de/repository/maven-public/</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -40,28 +52,28 @@
 		<dependency>
 			<groupId>com.winterhaven-mc</groupId>
 			<artifactId>world-manager-lib</artifactId>
-			<version>1.0.7</version>
+			<version>1.0.8</version>
 		</dependency>
 
 		<!-- MessageManagerLib -->
 		<dependency>
 			<groupId>com.winterhaven-mc</groupId>
 			<artifactId>message-manager-lib</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7</version>
 		</dependency>
 
 		<!-- SoundConfigLib -->
 		<dependency>
 			<groupId>com.winterhaven-mc</groupId>
 			<artifactId>sound-config-lib</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3</version>
 		</dependency>
 
-		<!-- Bukkit -->
+		<!-- Spigot -->
 		<dependency>
-			<groupId>org.bukkit</groupId>
-			<artifactId>bukkit</artifactId>
-			<version>1.13.2-R0.1-SNAPSHOT</version>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+			<version>1.14.4-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -93,7 +105,7 @@
 		<dependency>
 			<groupId>com.github.TechFortress</groupId>
 			<artifactId>GriefPrevention</artifactId>
-			<version>16.11.5</version>
+			<version>16.11.6</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -101,7 +113,7 @@
 		<dependency>
 			<groupId>com.palmergames</groupId>
 			<artifactId>Towny</artifactId>
-			<version>0.93.0.0</version>
+			<version>0.93.0.5</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -109,7 +121,23 @@
 		<dependency>
 			<groupId>com.winterhaven-mc</groupId>
 			<artifactId>RoadBlock</artifactId>
-			<version>1.13.1</version>
+			<version>1.14.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Factions -->
+		<dependency>
+			<groupId>com.massivecraft</groupId>
+			<artifactId>Factions</artifactId>
+			<version>1.6.9.5-U0.4.3</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Multiverse -->
+		<dependency>
+			<groupId>com.onarandombox.multiversecore</groupId>
+			<artifactId>Multiverse-Core</artifactId>
+			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

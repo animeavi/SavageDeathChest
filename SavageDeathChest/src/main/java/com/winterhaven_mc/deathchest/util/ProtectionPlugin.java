@@ -1,7 +1,14 @@
 package com.winterhaven_mc.deathchest.util;
 
 import com.winterhaven_mc.deathchest.PluginMain;
-
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.zcore.fperms.Access;
+import com.massivecraft.factions.zcore.fperms.PermissableAction;
 import com.palmergames.bukkit.towny.object.TownyPermission;
 import com.palmergames.bukkit.towny.utils.PlayerCacheUtil;
 
@@ -28,43 +35,81 @@ import org.bukkit.plugin.Plugin;
  */
 public enum ProtectionPlugin {
 
-//	FACTIONS("Factions") {
-//
-//		@Override
-//		public final boolean hasPlacePermission(final Player player, final Location location) {
-//
-//			// use try..catch block to gracefully handle exceptions thrown by protection plugin
-//			try {
-//				if (!EnginePermBuild.canPlayerBuildAt(player, PS.valueOf(location), false)) {
-//					return false;
-//				}
-//
-//			}
-//			catch (Exception e) {
-//				logPlaceError();
-//			}
-//
-//			return true;
-//		}
-//
-//		@Override
-//		public final boolean hasChestPermission(final Player player, final Location location) {
-//
-//			// use try..catch block to gracefully handle exceptions thrown by protection plugin
-//			try {
-//				if (!EnginePermBuild.useBlock(player, location.getBlock(), Material.CHEST, false)) {
-////				if (!EngineMain.playerCanUseItemHere(player, PS.valueOf(location), Material.CHEST, false)) {
-//					return false;
-//				}
-//			}
-//			catch (Exception e) {
-//				logAccessError();
-//			}
-//
-//			return true;
-//		}
-//
-//	},
+    FACTIONS("Factions") {
+
+        @Override
+        public final boolean hasPlacePermission(final Player player, final Location location) {
+
+            // use try..catch block to gracefully handle exceptions thrown by protection plugin
+            try {
+                boolean canBuild = false;
+                FLocation fLocation = new FLocation(location);
+                FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+                Faction faction = Board.getInstance().getFactionAt(fLocation);
+                Faction myFaction = fPlayer.getFaction();
+                boolean fBypass = Conf.playersWhoBypassAllProtection.contains(fPlayer.getName())
+                        || fPlayer.isAdminBypassing();
+                boolean fWilderness = faction.isWilderness() && !Conf.wildernessDenyBuild;
+                boolean fWarzone = faction.isWarZone() && !Conf.warZoneDenyBuild;
+                boolean fSafezone = faction.isSafeZone() && !Conf.safeZoneDenyBuild;
+
+                if (fBypass || fWilderness || fWarzone || fSafezone) {
+                    canBuild = true;
+                } else if (!myFaction.getRelationTo(faction).confDenyBuild(faction.hasPlayersOnline())) {
+                    canBuild = true;
+                } else {
+                    Access fAccess = faction.getAccess(fPlayer, PermissableAction.BUILD);
+                    if (fAccess != null) {
+                        canBuild = (fAccess == Access.ALLOW);
+                    }
+                }
+
+                if (!canBuild) {
+                    return false;
+                }
+            } catch (Exception e) {
+                logPlaceError();
+            }
+
+            return true;
+        }
+
+        @Override
+        public final boolean hasChestPermission(final Player player, final Location location) {
+
+            // use try..catch block to gracefully handle exceptions thrown by protection plugin
+            try {
+                boolean canChest = false;
+                FLocation fLocation = new FLocation(location);
+                FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
+                Faction faction = Board.getInstance().getFactionAt(fLocation);
+                boolean fBypass = Conf.playersWhoBypassAllProtection.contains(fPlayer.getName())
+                        || fPlayer.isAdminBypassing();
+                boolean fWilderness = faction.isWilderness() && !Conf.wildernessDenyBuild;
+                boolean fWarzone = faction.isWarZone() && !Conf.warZoneDenyBuild;
+                boolean fSafezone = faction.isSafeZone() && !Conf.safeZoneDenyBuild;
+
+                if (fBypass || fWilderness || fWarzone || fSafezone) {
+                    canChest = true;
+                } else {
+                    Access fAccess = faction.getAccess(fPlayer, PermissableAction.CONTAINER);
+                    if (fAccess != null) {
+                        canChest = (fAccess == Access.ALLOW);
+                    }
+                }
+
+                if (!canChest) {
+                    return false;
+                }
+            }
+            catch (Exception e) {
+                logAccessError();
+            }
+
+            return true;
+        }
+
+    },
 
 	GRIEFPREVENTION("GriefPrevention") {
 		@Override
