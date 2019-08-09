@@ -465,10 +465,10 @@ public final class Deployment {
 		// get clone of player death location
 		Location testLocation = player.getLocation().clone();
 
-		// if player died in the void, start search at y=1 if place-above-void configured true
+		// if player died in the void, start search at y=64 if place-above-void configured true
 		if (plugin.getConfig().getBoolean("place-above-void")
 				&& testLocation.getY() < 1) {
-			testLocation.setY(1);
+			testLocation.setY(64);
 		}
 
 		// if player died above world build height, start search at build height minus search distance
@@ -694,7 +694,6 @@ public final class Deployment {
 	 * @param chestBlock Chest block
 	 * @return boolean - Success or failure to place sign
 	 */
-	@SuppressWarnings("UnusedReturnValue")
 	private boolean placeSign(final Player player, final Block chestBlock) {
 
 		// if chest-signs are not enabled in configuration, do nothing and return
@@ -702,87 +701,93 @@ public final class Deployment {
 			return false;
 		}
 
-		// get block on top of chest
-		Block signBlock = chestBlock.getRelative(BlockFace.UP);
+		// try placing sign on chest, catching any exception thrown
+		try {
+			// get block on top of chest
+			Block signBlock = chestBlock.getRelative(BlockFace.UP);
 
-		// if chest top is valid location, create sign on top
-		if (isValidSignLocation(signBlock.getLocation())) {
-			signBlock.setType(Material.OAK_SIGN);
-		}
-		else {
-			// create sign on chest face if chest top was invalid location
-			signBlock = chestBlock.getRelative(getCardinalDirection(player));
+			// if chest top is valid location, create sign on top
 			if (isValidSignLocation(signBlock.getLocation())) {
-				signBlock.setType(Material.OAK_WALL_SIGN);
-			}
-			else {
-				// if chest face is also an invalid location, do nothing and return
-				return false;
-			}
-		}
-
-		// get block state of sign block
-		BlockState signBlockState = signBlock.getState();
-
-		// if block has not been successfully transformed into a sign, return false
-		if (!(signBlockState instanceof org.bukkit.block.Sign)) {
-			return false;
-		}
-
-		// Place text on sign with player name and death date
-		org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlockState;
-		String dateFormat = plugin.messageManager.getDateFormat();
-		String dateString = new SimpleDateFormat(dateFormat).format(System.currentTimeMillis());
-
-		// get sign text from language file
-		List<String> lines = plugin.messageManager.getSignText();
-
-		if (lines.isEmpty()) {
-			sign.setLine(0, ChatColor.BOLD + "R.I.P.");
-			sign.setLine(1, ChatColor.RESET + player.getName());
-			sign.setLine(3, "D: " + dateString);
-		}
-		else {
-			// use try..catch block so chest will still deploy even if error exists in yaml
-			try {
-				int lineCount = 0;
-				for (String line : lines) {
-					line = line.replace("%PLAYER_NAME%", player.getName());
-					line = line.replace("%DATE%", dateString);
-					line = line.replace("%WORLD_NAME%", plugin.worldManager.getWorldName(player.getWorld()));
-					line = ChatColor.translateAlternateColorCodes('&', line);
-					sign.setLine(lineCount, line);
-					lineCount++;
+				signBlock.setType(Material.OAK_SIGN);
+			} else {
+				// create sign on chest face if chest top was invalid location
+				signBlock = chestBlock.getRelative(getCardinalDirection(player));
+				if (isValidSignLocation(signBlock.getLocation())) {
+					signBlock.setType(Material.OAK_WALL_SIGN);
+				} else {
+					// if chest face is also an invalid location, do nothing and return
+					return false;
 				}
 			}
-			catch (Exception e) {
+
+			// get block state of sign block
+			BlockState signBlockState = signBlock.getState();
+
+			// if block has not been successfully transformed into a sign, return false
+			if (!(signBlockState instanceof org.bukkit.block.Sign)) {
+				return false;
+			}
+
+			// Place text on sign with player name and death date
+			org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlockState;
+			String dateFormat = plugin.messageManager.getDateFormat();
+			String dateString = new SimpleDateFormat(dateFormat).format(System.currentTimeMillis());
+
+			// get sign text from language file
+			List<String> lines = plugin.messageManager.getSignText();
+
+			if (lines.isEmpty()) {
 				sign.setLine(0, ChatColor.BOLD + "R.I.P.");
 				sign.setLine(1, ChatColor.RESET + player.getName());
 				sign.setLine(3, "D: " + dateString);
+			} else {
+				// use try..catch block so chest will still deploy even if error exists in yaml
+				try {
+					int lineCount = 0;
+					for (String line : lines) {
+						line = line.replace("%PLAYER_NAME%", player.getName());
+						line = line.replace("%DATE%", dateString);
+						line = line.replace("%WORLD_NAME%", plugin.worldManager.getWorldName(player.getWorld()));
+						line = ChatColor.translateAlternateColorCodes('&', line);
+						sign.setLine(lineCount, line);
+						lineCount++;
+					}
+				} catch (Exception e) {
+					sign.setLine(0, ChatColor.BOLD + "R.I.P.");
+					sign.setLine(1, ChatColor.RESET + player.getName());
+					sign.setLine(3, "D: " + dateString);
+				}
 			}
+
+			// set sign facing direction
+			if (signBlock.getType() != Material.OAK_SIGN) {
+				BlockData signData = signBlock.getBlockData();
+				((Directional) signData).setFacing(getCardinalDirection(player));
+				signBlock.setBlockData(signData);
+			}
+
+			// update sign block with text and direction
+			sign.update();
+
+			// create ChestBlock for this sign block
+			ChestBlock signChestBlock = new ChestBlock(deathChest.getChestUUID(), signBlock.getLocation());
+
+			// add this ChestBlock to block map
+			plugin.chestManager.addChestBlock(ChestBlockType.SIGN, signChestBlock);
+
+			// set block metadata
+			signChestBlock.setMetadata(deathChest);
+
+			// return success
+			return true;
+		} catch (Exception e) {
+			if (plugin.debug) {
+				plugin.getLogger().severe("An error occurred while trying to place the death chest sign.");
+				plugin.getLogger().severe(e.getLocalizedMessage());
+				e.printStackTrace();
+			}
+			return false;
 		}
-
-		// set sign facing direction
-		if (signBlock.getType() != Material.OAK_SIGN) {
-			BlockData signData = signBlock.getBlockData();
-			((Directional) signData).setFacing(getCardinalDirection(player));
-			signBlock.setBlockData(signData);
-		}
-
-		// update sign block with text and direction
-		sign.update();
-
-		// create ChestBlock for this sign block
-		ChestBlock signChestBlock = new ChestBlock(deathChest.getChestUUID(), signBlock.getLocation());
-
-		// add this ChestBlock to block map
-		plugin.chestManager.addChestBlock(ChestBlockType.SIGN, signChestBlock);
-
-		// set block metadata
-		signChestBlock.setMetadata(deathChest);
-
-		// return success
-		return true;
 	}
 
 
